@@ -1,6 +1,6 @@
 "use client";
 
-import { login } from "@/actions/login";
+import { newPassword } from "@/actions/new-password";
 import CardWrapper from "@/components/auth/card-wrapper";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
@@ -14,74 +14,45 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LoginSchema } from "@/schemas";
+import { NewPasswordSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-function LoginForm() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const [urlError, setUrlError] = useState(
-    searchParams.get("error") === "OAuthAccountNotLinked"
-      ? "Email Already in used with different provider."
-      : ""
-  );
-
+  const token = searchParams.get("token");
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const form = useForm<z.infer<typeof NewPasswordSchema>>({
+    resolver: zodResolver(NewPasswordSchema),
+    defaultValues: { password: "" },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = (values: z.infer<typeof NewPasswordSchema>) => {
     setError("");
-    setUrlError("");
     setSuccess("");
     startTransition(() => {
-      login(values).then((data) => {
-        setError(data?.error!);
-
-        setSuccess(data?.message);
+      newPassword(values, token).then((data) => {
+        setError(data?.error);
+        setSuccess(data?.success);
+        form.reset({ password: "" });
       });
     });
   };
   return (
     <CardWrapper
-      headerLabel="Welcome Back"
-      backButtonLabel="Don't have an account?"
-      backButtonHref="/auth/register"
-      showSocial
+      headerLabel="New Password"
+      backButtonLabel="Back to login"
+      backButtonHref="/auth/login"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name={"email"}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={"johndoe@example.com"}
-                      type={"email"}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name={"password"}
@@ -100,16 +71,8 @@ function LoginForm() {
                 </FormItem>
               )}
             />
-            <Button
-              asChild
-              className="px-0 font-normal h-4"
-              size={"sm"}
-              variant={"link"}
-            >
-              <Link href={"/auth/reset"}>Forgot Password?</Link>
-            </Button>
           </div>
-          <FormError message={error || urlError} />
+          <FormError message={error} />
           <FormSuccess message={success} />
           <Button
             className="w-full my-0"
@@ -118,7 +81,7 @@ function LoginForm() {
             variant={"default"}
             size={"lg"}
           >
-            Login
+            Reset Password
           </Button>
         </form>
       </Form>
@@ -126,4 +89,4 @@ function LoginForm() {
   );
 }
 
-export default LoginForm;
+export default ResetPasswordForm;

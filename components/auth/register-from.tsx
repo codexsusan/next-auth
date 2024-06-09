@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import CardWrapper from "./card-wrapper";
+import CardWrapper from "@/components/auth/card-wrapper";
 
 function RegisterForm() {
   const [error, setError] = useState<string | undefined>("");
